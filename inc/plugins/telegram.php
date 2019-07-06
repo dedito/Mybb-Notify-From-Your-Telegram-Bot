@@ -53,6 +53,7 @@ class myTelegramBot {
 		global $mybb;
 		$final = "{BOARDNAME} \n\n ".$message;		
 		$preDefined = array('{BOARDNAME}'=>$mybb->settings['bbname'],'{BOARDURL}'=>''.$mybb->settings['bburl']);
+		//$preDefined = array('{BOARDNAME}'=>$mybb->settings['bbname'],'{BOARDURL}'=>$mybb->settings['bburl']);
 		foreach ($preDefined as $key => $value)
 			$final = str_replace($key, $value, $final);
 		if(count($arguments) != 0){
@@ -69,7 +70,7 @@ function telegram_info(){
 		"name"		=> "Notify From Your Telegram Bot",
 		"description"		=> "Get notified of your latest forum events by your own telegram bot.",
 		"author"		=> "Pedram Asbaghi [Ponishweb]",
-		"version"		=> "1.0.1 mod.0.1 dedito",
+		"version"		=> "1.0.1 mod.0.2 dedito",
 		"codename" 			=> "telegram_bot",
 		"compatibility"	=> "18*",
 		'website'=>'https://github.com/dedito/Mybb-Notify-From-Your-Telegram-Bot', //'http://ponishweb.ir',
@@ -108,36 +109,47 @@ function telegram_install(){
 	        'optionscode' => 'text',
 	        'disporder' => 1,
 	        'value' => 0
-	    ),'my_telegram_gpid' => array(
+	    ),
+	    'my_telegram_gpid' => array(
 	        'title' => 'Your Chat ID',
 	        'description' => "For Get This ID, Click On $token (in the new window, Find Chat ID value and save in here).",
 	        'optionscode' => 'text',
-	        'disporder' => 1,
+	        'disporder' => 2,
 	        'value' => 0
-	    ),'my_telegram_login_status' => array(
+	    ),
+	    'my_telegram_login_status' => array(
 	        'title' => 'Enbale Notifications on Login ?!',
 	        'description' => 'If Enable Notifies You When Users Log into Forum',
 	        'optionscode' => 'yesno',
-	        'disporder' => 2,
+	        'disporder' => 3,
 	        'value' => 0
-	    ),'my_telegram_signup_status' => array(
+	    ),
+	    'my_telegram_signup_status' => array(
 	        'title' => 'Enbale Notifications on Signup ?!',
 	        'description' => 'If Enable Notifies You When Users Signup on Forum',
 	        'optionscode' => 'yesno',
-	        'disporder' => 3,
+	        'disporder' => 4,
 	        'value' => 0
 	    ),
 	    'my_telegram_thread_status' => array(
 	        'title' => 'Enbale Notifications on Thread Creation ?!',
 	        'description' => 'If Enable Notifies You When Users Create Threads on Board',
 	        'optionscode' => 'yesno',
-	        'disporder' => 3,
+	        'disporder' => 5,
 	        'value' => 0
-	    ),'my_telegram_security_status' => array(
+	    ),
+	    'my_telegram_reply_status' => array(
+	        'title' => 'Enbale Notifications on New Reply ?!',
+	        'description' => 'If Enable Notifies You When Users Create New Reply on Board',
+	        'optionscode' => 'yesno',
+	        'disporder' => 6,
+	        'value' => 0
+	    ),
+	    'my_telegram_security_status' => array(
 	        'title' => 'Enbale Security Notifications ?!',
 	        'description' => 'When Somebody Wants to access Admin Panel / Mod Cpanel Notifies You !',
 	        'optionscode' => 'yesno',
-	        'disporder' => 3,
+	        'disporder' => 7,
 	        'value' => 0
 	    )
 		);
@@ -185,13 +197,23 @@ function my_login_notifications($obj){
 function my_thread_notifications(){
 	global $db,$mybb;
 	if(!$mybb->settings['my_telegram_thread_status']){return FALSE;}
-	$thread_message = "Użytkownik {UNAME} rozpoczął nowy wątek ' {TOPICNAME} '\n {TOPICURL}"; //"A Topic Called ' {TOPICNAME} ' Has Been Started By {UNAME}\n {TOPICURL}";
+	$thread_message = "Użytkownik {UNAME} rozpoczął nowy wątek ' {TOPICNAME} '\n {BOARDURL}{TOPICURL}"; //"A Topic Called ' {TOPICNAME} ' Has Been Started By {UNAME}\n {TOPICURL}";
 	$ThreadQuery = $db->query("SELECT subject,username,tid FROM ".TABLE_PREFIX."threads ORDER BY tid DESC LIMIT 1");
 	$LastThread = $db->fetch_array($ThreadQuery);
 	//myTelegramBot::sendTextMessage(myTelegramBot::prepareTextMessage($thread_message,array('{TOPICNAME}'=>$LastThread['subject'],'{UNAME}'=>$LastThread['username'],'{TOPICURL}'=> '{BOARDURL}/showthread.php?tid='.$LastThread['tid'])),$mybb->settings['my_telegram_token'],$mybb->settings['my_telegram_gpid']);
-	myTelegramBot::sendTextMessage(myTelegramBot::prepareTextMessage($thread_message,array('{TOPICNAME}'=>$LastThread['subject'],'{UNAME}'=>$LastThread['username'],'{TOPICURL}'=> 'https://forum.linuxmint.pl/showthread.php?tid='.$LastThread['tid'])),$mybb->settings['my_telegram_token'],$mybb->settings['my_telegram_gpid']);
+	myTelegramBot::sendTextMessage(myTelegramBot::prepareTextMessage($thread_message,array('{TOPICNAME}'=>$LastThread['subject'],'{UNAME}'=>$LastThread['username'],'{TOPICURL}'=>'/showthread.php?tid='.$LastThread['tid'])),$mybb->settings['my_telegram_token'],$mybb->settings['my_telegram_gpid']);
 }
-
+/*
+function my_reply_notifications(){
+	global $db,$mybb;
+	if(!$mybb->settings['my_telegram_reply_status']){return FALSE;}
+	$reply_message = "Użytkownik {UNAME} napisał nową odpowiedź w wątku ' {TOPICNAME} '\n {TOPICURL}"; //"A Topic Called ' {TOPICNAME} ' Has Been Started By {UNAME}\n {TOPICURL}";
+	$ThreadQuery = $db->query("SELECT subject,username,tid FROM ".TABLE_PREFIX."threads ORDER BY tid DESC LIMIT 1");
+	$LastThread = $db->fetch_array($ThreadQuery);
+	//myTelegramBot::sendTextMessage(myTelegramBot::prepareTextMessage($thread_message,array('{TOPICNAME}'=>$LastThread['subject'],'{UNAME}'=>$LastThread['username'],'{TOPICURL}'=> '{BOARDURL}/showthread.php?tid='.$LastThread['tid'])),$mybb->settings['my_telegram_token'],$mybb->settings['my_telegram_gpid']);
+	myTelegramBot::sendTextMessage(myTelegramBot::prepareTextMessage($reply_message,array('{TOPICNAME}'=>$LastThread['subject'],'{UNAME}'=>$LastThread['username'],'{TOPICURL}'=> 'https://forum.linuxmint.pl/showthread.php?tid='.$LastThread['tid'])),$mybb->settings['my_telegram_token'],$mybb->settings['my_telegram_gpid']);
+}
+*/
 function my_signup_notifications(){
 	global $db,$mybb;
 	if(!$mybb->settings['my_telegram_signup_status']){return FALSE;}
@@ -252,6 +274,7 @@ function curlMyT($url) {
 
 $plugins->add_hook('datahandler_login_complete_end', 'my_login_notifications');
 $plugins->add_hook('newthread_do_newthread_end','my_thread_notifications');
+//$plugins->add_hook('newreply_do_newreply_end','my_reply_notifications');
 $plugins->add_hook('member_do_register_end','my_signup_notifications');
 $plugins->add_hook('admin_load','my_token_warning');
 $plugins->add_hook('admin_load','my_adminpanel_notifications');
