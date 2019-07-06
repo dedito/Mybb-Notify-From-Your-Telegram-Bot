@@ -41,11 +41,11 @@ class myTelegramBot {
 		
 		//Send Messsage
 		if(function_exists('curl_version')){
-			$response =	curlMyT("https://api.telegram.org/bot$token/SendMessage?chat_id=$gpid&text=$msg");
+			$response =	curlMyT("https://api.telegram.org/bot$token/SendMessage?chat_id=$gpid&text=$msg&parse_mode=HTML");
 		}
 		else
 		{
-			$response =	file_get_contents("https://api.telegram.org/bot$token/SendMessage?chat_id=$gpid&text=$msg", false, $context);
+			$response =	file_get_contents("https://api.telegram.org/bot$token/SendMessage?chat_id=$gpid&text=$msg&parse_mode=HTML", false, $context);
 		}
 	}
 	
@@ -70,7 +70,7 @@ function telegram_info(){
 		"name"		=> "Notify From Your Telegram Bot",
 		"description"		=> "Get notified of your latest forum events by your own telegram bot.",
 		"author"		=> "Pedram Asbaghi [Ponishweb]",
-		"version"		=> "1.0.1 mod.0.2 dedito",
+		"version"		=> "1.0.1 mod.0.3 dedito",
 		"codename" 			=> "telegram_bot",
 		"compatibility"	=> "18*",
 		'website'=>'https://github.com/dedito/Mybb-Notify-From-Your-Telegram-Bot', //'http://ponishweb.ir',
@@ -197,7 +197,8 @@ function my_login_notifications($obj){
 function my_thread_notifications(){
 	global $db,$mybb;
 	if(!$mybb->settings['my_telegram_thread_status']){return FALSE;}
-	$thread_message = "Użytkownik {UNAME} rozpoczął nowy wątek ' {TOPICNAME} '\n {BOARDURL}{TOPICURL}"; //"A Topic Called ' {TOPICNAME} ' Has Been Started By {UNAME}\n {TOPICURL}";
+	//$thread_message = "Użytkownik {UNAME} rozpoczął nowy wątek ' {TOPICNAME} '\n {BOARDURL}{TOPICURL}"; //"A Topic Called ' {TOPICNAME} ' Has Been Started By {UNAME}\n {TOPICURL}";
+	$thread_message = 'Użytkownik {UNAME} rozpoczął nowy wątek <a href="{BOARDURL}{TOPICURL}">{TOPICNAME}</a>';
 	$ThreadQuery = $db->query("SELECT subject,username,tid FROM ".TABLE_PREFIX."threads ORDER BY tid DESC LIMIT 1");
 	$LastThread = $db->fetch_array($ThreadQuery);
 	//myTelegramBot::sendTextMessage(myTelegramBot::prepareTextMessage($thread_message,array('{TOPICNAME}'=>$LastThread['subject'],'{UNAME}'=>$LastThread['username'],'{TOPICURL}'=> '{BOARDURL}/showthread.php?tid='.$LastThread['tid'])),$mybb->settings['my_telegram_token'],$mybb->settings['my_telegram_gpid']);
