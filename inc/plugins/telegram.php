@@ -51,7 +51,7 @@ class myTelegramBot {
 	
 	public static function prepareTextMessage($message,$arguments=array()){
 		global $mybb;
-		$final = "{BOARDNAME} \n\n ".$message;		
+		$final = "Nowe zdarzenie na {BOARDNAME}.\n".$message;		
 		$preDefined = array('{BOARDNAME}'=>$mybb->settings['bbname'],'{BOARDURL}'=>''.$mybb->settings['bburl']);
 		//$preDefined = array('{BOARDNAME}'=>$mybb->settings['bbname'],'{BOARDURL}'=>$mybb->settings['bburl']);
 		foreach ($preDefined as $key => $value)
@@ -70,7 +70,7 @@ function telegram_info(){
 		"name"		=> "Notify From Your Telegram Bot",
 		"description"		=> "Get notified of your latest forum events by your own telegram bot.",
 		"author"		=> "Pedram Asbaghi [Ponishweb]",
-		"version"		=> "1.0.1 mod.0.3a dedito",
+		"version"		=> "1.0.1 mod.0.3b dedito",
 		"codename" 			=> "telegram_bot",
 		"compatibility"	=> "18*",
 		'website'=>'https://github.com/dedito/Mybb-Notify-From-Your-Telegram-Bot', //'http://ponishweb.ir',
@@ -85,7 +85,7 @@ function telegram_install(){
 	    'name' => 'my_telegram_settings',
 	    'title' => 'Telegram Bot Settings',
 	    'description' => 'Set Your Own Token in Here',
-	    'disporder' => 6,
+	    'disporder' => 7,
 	    'isdefault' => 0
 	);
 
@@ -178,7 +178,7 @@ function telegram_is_installed()
 function telegram_uninstall()
 {
 	global $db;
-	$db->delete_query('settings', "name IN ('my_telegram_token','my_telegram_gpid','telegram_signup_status','telegram_login_status','telegram_thread_status','telegram_security_status')");
+	$db->delete_query('settings', "name IN ('my_telegram_token','my_telegram_gpid','telegram_signup_status','telegram_login_status','telegram_thread_status','telegram_reply_status','telegram_security_status')");
 	$db->delete_query('settinggroups', "name = 'my_telegram_settings'");
 	rebuild_settings();
 }
@@ -223,7 +223,7 @@ function my_reply_notifications(){
 function my_signup_notifications(){
 	global $db,$mybb;
 	if(!$mybb->settings['my_telegram_signup_status']){return FALSE;}
-	$Signup_Message = "Zarajestrował się nowy użytkownik {UNAME} \n {BOARDURL}"; //"{UNAME} Has Been Successfuly Registred. \n {BOARDURL}";
+	$Signup_Message = "Zarejestrował się nowy użytkownik {UNAME} \n {BOARDURL}"; //"{UNAME} Has Been Successfuly Registred. \n {BOARDURL}";
 	$LastUserQuery = $db->query('SELECT username FROM '.TABLE_PREFIX.'users ORDER BY uid DESC LIMIT 1');
 	$LastUser = $db->fetch_array($LastUserQuery);
 	myTelegramBot::sendTextMessage(myTelegramBot::prepareTextMessage($Signup_Message,array('{UNAME}'=>$LastUser['username'])),$mybb->settings['my_telegram_token'],$mybb->settings['my_telegram_gpid']);
