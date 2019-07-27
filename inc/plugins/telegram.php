@@ -51,7 +51,7 @@ class myTelegramBot {
 	
 	public static function prepareTextMessage($message,$arguments=array()){
 		global $mybb;
-		$final = "Nowe zdarzenie na {BOARDNAME}.\n".$message;		
+		$final = 'Nowe zdarzenie na <a href="{BOARDURL}">{BOARDNAME}</a>.'."\n".$message;		
 		$preDefined = array('{BOARDNAME}'=>$mybb->settings['bbname'],'{BOARDURL}'=>''.$mybb->settings['bburl']);
 		//$preDefined = array('{BOARDNAME}'=>$mybb->settings['bbname'],'{BOARDURL}'=>$mybb->settings['bburl']);
 		foreach ($preDefined as $key => $value)
@@ -70,7 +70,7 @@ function telegram_info(){
 		"name"		=> "Notify From Your Telegram Bot",
 		"description"		=> "Get notified of your latest forum events by your own telegram bot.",
 		"author"		=> "Pedram Asbaghi [Ponishweb]",
-		"version"		=> "1.0.1 mod.0.3b dedito",
+		"version"		=> "1.0.1 mod.0.3c dedito",
 		"codename" 			=> "telegram_bot",
 		"compatibility"	=> "18*",
 		'website'=>'https://github.com/dedito/Mybb-Notify-From-Your-Telegram-Bot', //'http://ponishweb.ir',
@@ -223,7 +223,7 @@ function my_reply_notifications(){
 function my_signup_notifications(){
 	global $db,$mybb;
 	if(!$mybb->settings['my_telegram_signup_status']){return FALSE;}
-	$Signup_Message = "Zarejestrował się nowy użytkownik {UNAME} \n {BOARDURL}"; //"{UNAME} Has Been Successfuly Registred. \n {BOARDURL}";
+	$Signup_Message = "Zarejestrował się nowy użytkownik {UNAME}"; //"{UNAME} Has Been Successfuly Registred. \n {BOARDURL}";
 	$LastUserQuery = $db->query('SELECT username FROM '.TABLE_PREFIX.'users ORDER BY uid DESC LIMIT 1');
 	$LastUser = $db->fetch_array($LastUserQuery);
 	myTelegramBot::sendTextMessage(myTelegramBot::prepareTextMessage($Signup_Message,array('{UNAME}'=>$LastUser['username'])),$mybb->settings['my_telegram_token'],$mybb->settings['my_telegram_gpid']);
@@ -232,7 +232,7 @@ function my_adminpanel_notifications(){
 	global $mybb;
 	if(!$mybb->settings['my_telegram_security_status']){return FALSE;}
 	if(!$_COOKIE['AdminpanelReached']){
-		$AdminPanel_Message = " Zalogowano do ACP z adresu IP ({IP})\n\n{BOARDURL}"; //" I have Detected A Successful Login To Admin Panel From ({IP})\n\n{BOARDURL}";
+		$AdminPanel_Message = " Zalogowano do ACP z adresu IP ({IP})"; //" I have Detected A Successful Login To Admin Panel From ({IP})\n\n{BOARDURL}";
 		setcookie('AdminpanelReached', 1, time()+3600);
 		myTelegramBot::sendTextMessage(myTelegramBot::prepareTextMessage($AdminPanel_Message,array('{IP}'=>$_SERVER['REMOTE_ADDR'])),$mybb->settings['my_telegram_token'],$mybb->settings['my_telegram_gpid']);
 	}
@@ -241,7 +241,7 @@ function my_modcp_notifications(){
 	global $mybb;
 	if(!$mybb->settings['telegram_security_status']){return FALSE;}
 	if(!$_COOKIE['ModcpReached']){
-		$Modcp_Message = "Zalogowano do MCP z adresu IP ({IP})\n\n{BOARDURL}"; //"I have Detected A Successful Login To Modcp From ({IP})\n\n{BOARDURL}";
+		$Modcp_Message = "Zalogowano do MCP z adresu IP ({IP})"; //"I have Detected A Successful Login To Modcp From ({IP})\n\n{BOARDURL}";
 		setcookie('ModcpReached', 1, time()+3600);
 		myTelegramBot::sendTextMessage(myTelegramBot::prepareTextMessage($Modcp_Message,array('{IP}'=>$_SERVER['REMOTE_ADDR'])),$mybb->settings['my_telegram_token'],$mybb->settings['my_telegram_gpid']);
 	}
