@@ -70,7 +70,7 @@ function telegram_info(){
 		"name"		=> "Notify From Your Telegram Bot",
 		"description"		=> "Get notified of your latest forum events by your own telegram bot.",
 		"author"		=> "Pedram Asbaghi [Ponishweb]",
-		"version"		=> "1.0.1 mod.0.3c dedito",
+		"version"		=> "1.0.1 mod.0.3d dedito",
 		"codename" 			=> "telegram_bot",
 		"compatibility"	=> "18*",
 		'website'=>'https://github.com/dedito/Mybb-Notify-From-Your-Telegram-Bot', //'http://ponishweb.ir',
@@ -189,18 +189,18 @@ function my_telegram_deactivate(){}
 function my_login_notifications($obj){
 	global $mybb;
 	if(!$mybb->settings['my_telegram_login_status']){return FALSE;}
-	$login_message = 'Użytkownik " {NAME} " zalogował się na Forum'."\n\n{BOARDURL}"; // 'User " {NAME} " Has Been Logged into Forum'."\n\n{BOARDURL}";
 	$data = get_object_vars($obj);
-	myTelegramBot::sendTextMessage( myTelegramBot::prepareTextMessage($login_message,array('{NAME}'=>$data['login_data']['username'])) ,$mybb->settings['my_telegram_token'],$mybb->settings['my_telegram_gpid']);	
+	$login_message = 'Użytkownik <a href="{BOARDURL}/member.php?action=profile&uid={ID}">{NAME}</a> zalogował się na Forum.'; // 'User " {NAME} " Has Been Logged into Forum'."\n\n{BOARDURL}";
+	myTelegramBot::sendTextMessage( myTelegramBot::prepareTextMessage($login_message,array('{ID}'=>$data['login_data']['uid'],'{NAME}'=>$data['login_data']['username'])) ,$mybb->settings['my_telegram_token'],$mybb->settings['my_telegram_gpid']);	
 }
 
 function my_thread_notifications(){
 	global $db,$mybb;
 	if(!$mybb->settings['my_telegram_thread_status']){return FALSE;}
-	//$thread_message = "Użytkownik {UNAME} rozpoczął nowy wątek ' {TOPICNAME} '\n {BOARDURL}{TOPICURL}"; //"A Topic Called ' {TOPICNAME} ' Has Been Started By {UNAME}\n {TOPICURL}";
-	$thread_message = 'Użytkownik {UNAME} rozpoczął nowy wątek <a href="{BOARDURL}{TOPICURL}">{TOPICNAME}</a>';
-	$ThreadQuery = $db->query("SELECT subject,username,tid FROM ".TABLE_PREFIX."threads ORDER BY tid DESC LIMIT 1");
+	$ThreadQuery = $db->query("SELECT subject,username,uid,tid FROM ".TABLE_PREFIX."threads ORDER BY tid DESC LIMIT 1");
 	$LastThread = $db->fetch_array($ThreadQuery);
+	//$thread_message = "Użytkownik {UNAME} rozpoczął nowy wątek ' {TOPICNAME} '\n {BOARDURL}{TOPICURL}"; //"A Topic Called ' {TOPICNAME} ' Has Been Started By {UNAME}\n {TOPICURL}";
+	$thread_message = 'Użytkownik <a href="{BOARDURL}/member.php?action=profile&uid='.$LastThread['uid'].'">{UNAME}</a> rozpoczął nowy wątek <a href="{BOARDURL}{TOPICURL}">{TOPICNAME}</a>';
 	//myTelegramBot::sendTextMessage(myTelegramBot::prepareTextMessage($thread_message,array('{TOPICNAME}'=>$LastThread['subject'],'{UNAME}'=>$LastThread['username'],'{TOPICURL}'=> '{BOARDURL}/showthread.php?tid='.$LastThread['tid'])),$mybb->settings['my_telegram_token'],$mybb->settings['my_telegram_gpid']);
 	myTelegramBot::sendTextMessage(myTelegramBot::prepareTextMessage($thread_message,array('{TOPICNAME}'=>$LastThread['subject'],'{UNAME}'=>$LastThread['username'],'{TOPICURL}'=>'/showthread.php?tid='.$LastThread['tid'])),$mybb->settings['my_telegram_token'],$mybb->settings['my_telegram_gpid']);
 }
@@ -208,12 +208,12 @@ function my_thread_notifications(){
 function my_reply_notifications(){
 	global $db,$mybb;
 	if(!$mybb->settings['my_telegram_reply_status']){return FALSE;}
-	$row = $db->fetch_array($db->simple_select("posts", "pid, tid, fid, username, subject", "", ['order_by' => 'dateline DESC', 'limit' => 1]));
+	$row = $db->fetch_array($db->simple_select("posts", "pid, tid, fid, username,uid, subject", "", ['order_by' => 'dateline DESC', 'limit' => 1]));
 	$link = '<a href="'.$mybb->settings['bburl'].'/'.get_post_link($row['pid'], $row['tid']).'#pid'.$row['pid'].'">'.$row['subject'].'</a>';
-	$reply_message = 'Użytkownik {UNAME} napisał nową odpowiedź w wątku {TOPICURL}'; 
-	$ThreadQuery = $db->query("SELECT subject,username,tid FROM ".TABLE_PREFIX."threads ORDER BY tid DESC LIMIT 1");
+	$reply_message = 'Użytkownik <a href="{BOARDURL}/member.php?action=profile&uid='.$row['uid'].'">{UNAME}</a> napisał nową odpowiedź w wątku {TOPICURL}'; 
+	$ThreadQuery = $db->query("SELECT subject,username,uid,tid FROM ".TABLE_PREFIX."threads ORDER BY tid DESC LIMIT 1");
 	$LastThread = $db->fetch_array($ThreadQuery);
-	$PostQuery = $db->query("SELECT subject,username,pid FROM ".TABLE_PREFIX."posts ORDER BY pid DESC LIMIT 1");
+	$PostQuery = $db->query("SELECT subject,username,uid,pid FROM ".TABLE_PREFIX."posts ORDER BY pid DESC LIMIT 1");
 	$LastPost = $db->fetch_array($PostQuery);
 	//myTelegramBot::sendTextMessage(myTelegramBot::prepareTextMessage($thread_message,array('{TOPICNAME}'=>$LastThread['subject'],'{UNAME}'=>$LastThread['username'],'{TOPICURL}'=> '{BOARDURL}/showthread.php?tid='.$LastThread['tid'])),$mybb->settings['my_telegram_token'],$mybb->settings['my_telegram_gpid']);
 	//myTelegramBot::sendTextMessage(myTelegramBot::prepareTextMessage($reply_message,array('{TOPICNAME}'=>$LastPost['subject'],'{UNAME}'=>$LastPost['username'],'{TOPICURL}'=> '/showthread.php?tid='.$LastPost['tid']/*'&pid='.$LastPost['pid']'#pid'.$LastPost['pid']*/)),$mybb->settings['my_telegram_token'],$mybb->settings['my_telegram_gpid']);
@@ -223,10 +223,10 @@ function my_reply_notifications(){
 function my_signup_notifications(){
 	global $db,$mybb;
 	if(!$mybb->settings['my_telegram_signup_status']){return FALSE;}
-	$Signup_Message = "Zarejestrował się nowy użytkownik {UNAME}"; //"{UNAME} Has Been Successfuly Registred. \n {BOARDURL}";
-	$LastUserQuery = $db->query('SELECT username FROM '.TABLE_PREFIX.'users ORDER BY uid DESC LIMIT 1');
+	$Signup_Message = 'Zarejestrował się nowy użytkownik <a href="{BOARDURL}/member.php?action=profile&uid={ID}">{UNAME}</a>'; //"{UNAME} Has Been Successfuly Registred. \n {BOARDURL}";
+	$LastUserQuery = $db->query("SELECT username,uid FROM ".TABLE_PREFIX.'users ORDER BY uid DESC LIMIT 1');
 	$LastUser = $db->fetch_array($LastUserQuery);
-	myTelegramBot::sendTextMessage(myTelegramBot::prepareTextMessage($Signup_Message,array('{UNAME}'=>$LastUser['username'])),$mybb->settings['my_telegram_token'],$mybb->settings['my_telegram_gpid']);
+	myTelegramBot::sendTextMessage(myTelegramBot::prepareTextMessage($Signup_Message,array('{ID}'=>$LastUser['uid'],'{UNAME}'=>$LastUser['username'])),$mybb->settings['my_telegram_token'],$mybb->settings['my_telegram_gpid']);
 }
 function my_adminpanel_notifications(){
 	global $mybb;
